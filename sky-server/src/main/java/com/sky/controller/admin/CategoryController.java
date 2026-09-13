@@ -1,7 +1,9 @@
 package com.sky.controller.admin;
 
 import com.sky.dto.CategoryDTO;
+import com.sky.dto.CategoryPageQueryDTO;
 import com.sky.entity.Category;
+import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +59,25 @@ public class CategoryController {
     }
 
     /**
+     * 分类分页查询
+     */
+    @GetMapping("/page")
+    public Result<PageResult> page(CategoryPageQueryDTO categoryPageQueryDTO) {
+        log.info("分类分页查询：{}", categoryPageQueryDTO);
+        return Result.success(categoryService.pageQuery(categoryPageQueryDTO));
+    }
+
+    /**
+     * 修改分类
+     */
+    @PutMapping
+    public Result<String> update(@RequestBody CategoryDTO categoryDTO) {
+        log.info("修改分类：{}", categoryDTO);
+        categoryService.update(categoryDTO);
+        return Result.success();
+    }
+
+    /**
      * 根据id删除分类
      * @param id
      * @return
@@ -67,5 +88,4 @@ public class CategoryController {
         categoryService.deleteById(id);
         return Result.success();
     }
-
 }
