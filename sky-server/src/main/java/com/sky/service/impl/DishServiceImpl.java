@@ -19,6 +19,8 @@ import com.sky.service.DishService;
 import com.sky.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +47,7 @@ public class DishServiceImpl implements DishService {
      * 新增菜品及口味
      */
     @Override
+    @CacheEvict(cacheNames = "dishCache", key = "#p0.categoryId")
     @Transactional
     public void saveWithFlavor(DishDTO dishDTO) {
         Dish dish = new Dish();
@@ -81,6 +84,7 @@ public class DishServiceImpl implements DishService {
      * 批量删除菜品
      */
     @Override
+    @CacheEvict(cacheNames = "dishCache", allEntries = true)
     @Transactional
     public void deleteBatch(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
@@ -129,6 +133,7 @@ public class DishServiceImpl implements DishService {
      * 修改菜品及口味
      */
     @Override
+    @CacheEvict(cacheNames = {"dishCache", "setmealDishCache"}, allEntries = true)
     @Transactional
     public void updateWithFlavor(DishDTO dishDTO) {
         Dish dish = new Dish();
@@ -148,6 +153,7 @@ public class DishServiceImpl implements DishService {
      * 菜品起售、停售
      */
     @Override
+    @CacheEvict(cacheNames = {"dishCache", "setmealCache"}, allEntries = true)
     @Transactional
     public void startOrStop(Integer status, Long id) {
         Dish dish = Dish.builder()
@@ -188,6 +194,7 @@ public class DishServiceImpl implements DishService {
      * 根据条件查询菜品，并为每个菜品组装口味数据
      */
     @Override
+    @Cacheable(cacheNames = "dishCache", key = "#p0.categoryId")
     public List<DishVO> listWithFlavor(Dish dish) {
         List<Dish> dishList = dishMapper.list(dish);
         List<DishVO> dishVOList = new ArrayList<>(dishList.size());
