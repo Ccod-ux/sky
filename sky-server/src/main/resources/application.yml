@@ -6,6 +6,8 @@ spring:
     active: dev
   main:
     allow-circular-references: true
+  cache:
+    type: redis
   datasource:
     druid:
       driver-class-name: ${sky.datasource.driver-class-name}

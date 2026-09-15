@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sky.mapper.WorkspaceMapper">
+
+    <!--
+        营业额、有效订单数和平均客单价只统计已完成订单（status = 5）；
+        订单完成率 = 已完成订单数 / 今日总订单数；
+        新增用户数按 user 表的注册时间统计。
+    -->
+    <select id="getBusinessData" resultType="com.sky.vo.BusinessDataVO">
+        select
+            coalesce(sum(case when o.status = 5 then o.amount else 0 end), 0) as turnover,
+            coalesce(sum(case when o.status = 5 then 1 else 0 end), 0) as valid_order_count,
+            coalesce(
+                sum(case when o.status = 5 then 1 else 0 end) / nullif(count(o.id), 0),
+                0
+            ) as order_completion_rate,
+            coalesce(avg(case when o.status = 5 then o.amount end), 0) as unit_price,
+            (
+                select count(u.id)
+                from user u
+                where u.create_time &gt;= #{begin}
+                  and u.create_time &lt;= #{end}
+            ) as new_users
+        from orders o
+        where o.order_time &gt;= #{begin}
+          and o.order_time &lt;= #{end}
+    </select>
+
+    <!-- 今日各状态订单数量。状态：2待接单、3待派送、5已完成、6已取消。 -->
+    <select id="getOrderOverView" resultType="com.sky.vo.OrderOverViewVO">
+        select
+            coalesce(sum(case when status = 2 then 1 else 0 end), 0) as waiting_orders,
+            coalesce(sum(case when status = 3 then 1 else 0 end), 0) as delivered_orders,
+            coalesce(sum(case when status = 5 then 1 else 0 end), 0) as completed_orders,
+            coalesce(sum(case when status = 6 then 1 else 0 end), 0) as cancelled_orders,
+            count(id) as all_orders
+        from orders
+        where order_time &gt;= #{begin}
+          and order_time &lt; #{end}
+    </select>
+
+    <!-- 菜品状态：1启售、0停售。 -->
+    <select id="getDishOverView" resultType="com.sky.vo.DishOverViewVO">
+        select
+            coalesce(sum(case when status = 1 then 1 else 0 end), 0) as sold,
+            coalesce(sum(case when status = 0 then 1 else 0 end), 0) as discontinued
+        from dish
+    </select>
+
+    <!-- 套餐状态：1启售、0停售。 -->
+    <select id="getSetmealOverView" resultType="com.sky.vo.SetmealOverViewVO">
+        select
+            coalesce(sum(case when status = 1 then 1 else 0 end), 0) as sold,
+            coalesce(sum(case when status = 0 then 1 else 0 end), 0) as discontinued
+        from setmeal
+    </select>
+
+</mapper>
